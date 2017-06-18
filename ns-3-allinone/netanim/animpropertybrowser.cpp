@@ -297,9 +297,9 @@ AnimPropertyBroswer::setupNodeProperties ()
   m_nodeBrowser->setFactoryForManager (m_stringManager, m_lineEditFactory);
   connect (m_stringManager, SIGNAL (valueChanged (QtProperty*,QString)), this, SLOT (valueChangedSlot (QtProperty*,QString)));
   m_nodeBrowser->addProperty (m_nodeDescriptionProperty);
-  m_stringManager->setValue (m_nodeDescriptionProperty, animNode->getDescription ()->toPlainText ());
-
-
+  // m_stringManager->setValue (m_nodeDescriptionProperty, animNode->getDescription ()->toPlainText ());
+  // animNode->getDescription ();
+/*
   // Node Position
   m_nodePositionGroupProperty = m_nodePositionManager->addProperty ("Node Position");
   m_nodeXProperty = m_doubleManager->addProperty ("Node X");
@@ -422,7 +422,7 @@ AnimPropertyBroswer::setupNodeProperties ()
        m_intManager->setValue (prop, counterValue);
        m_nodeBrowser->addProperty (prop);
        m_nodeCounterUint32Property.push_back (prop);
-     }
+     }*/
 
 }
 

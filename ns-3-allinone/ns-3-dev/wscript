@@ -767,6 +767,9 @@ def add_scratch_programs(bld):
                 obj.target = name
                 obj.name = obj.target
                 obj.install_path = None
+                obj.lib = ['NetAnimOnline', 'QtGui', 'QtCore']
+                obj.includes += " ".join(['.', '../../netanim', '/usr/include/qt4/QtCore', '/usr/include/qt4/QtGui', '/usr/include/qt4' ])
+                obj.linkflags = ['-lNetAnimOnline', '-L../../netanim', '-Wl,-R,../netanim']
     except OSError:
         return
 

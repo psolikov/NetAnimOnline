@@ -1,4 +1,4 @@
-/* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
+  /* -*- Mode:C++; c-file-style:"gnu"; indent-tabs-mode:nil; -*- */
 /*
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -59,6 +59,7 @@ public:
   T get (qreal tUpperBound, TimeValueResult_t & result);
   TimeValueIteratorPair_t getRange (qreal lowerBound, qreal upperBound);
   TimeValueIteratorPair_t getNext (TimeValueResult_t & result);
+  void getNextGOOD (TimeValueResult_t & result);
   std::string toString ();
   void setLookBack (qreal lookBack);
   bool isEnd ();
@@ -210,6 +211,19 @@ TimeValue<T>::getNext (TimeValueResult_t & result)
 
 }
 
+
+//Online Mode
+template <class T>
+void
+TimeValue<T>::getNextGOOD (TimeValueResult_t & result)
+{
+  result = GOOD;
+  TimeValueIteratorPair_t pp =  m_timeValues.equal_range (m_getIterator->first);
+  if (m_getIterator == m_timeValues.end ())
+    {
+      result = OVERRUN;
+    }
+} 
 
 template <class T>
 T

@@ -81,118 +81,20 @@ Animxmlparser::~Animxmlparser ()
 }
 
 void
-Animxmlparser::searchForVersion ()
+Animxmlparser::doParse(ParsedElement parsedElement)
 {
-  QFile * f = new QFile (m_traceFileName);
-  if (f->open (QIODevice::ReadOnly | QIODevice::Text))
-    {
-      QString firstLine = QString (f->readLine ());
-      int startIndex = 0;
-      int endIndex = 0;
-      QString versionField = VERSION_FIELD_DEFAULT;
-      startIndex = firstLine.indexOf (versionField);
-      endIndex = firstLine.lastIndexOf ("\"");
-      if ((startIndex != -1) && (endIndex > startIndex))
-        {
-          int adjustedStartIndex = startIndex + versionField.length ();
-          QString v = firstLine.mid (adjustedStartIndex, endIndex-adjustedStartIndex);
-          m_version = v.toDouble ();
-        }
-      f->close ();
-      delete f;
-    }
-}
-
-uint64_t
-Animxmlparser::getRxCount ()
-{
-  searchForVersion ();
-  uint64_t count = 1;
-  QFile * f = new QFile (m_traceFileName);
-  if (f->open (QIODevice::ReadOnly | QIODevice::Text))
-    {
-      QString allContent = QString (f->readAll ());
-      int j = 0;
-      QString searchString = " toId=";
-      if (m_version >= 3.102)
-        searchString = " tId";
-
-      while ( (j = allContent.indexOf (searchString, j)) != -1)
-        {
-          ++j;
-          ++count;
-        }
-      f->close ();
-      delete f;
-      //qDebug (QString::number (count));
-    }
-  return qMax (count, (uint64_t)1);
-}
-
-bool
-Animxmlparser::isFileValid ()
-{
-  return m_fileIsValid;
-}
-
-bool
-Animxmlparser::isParsingComplete ()
-{
-  return m_parsingComplete;
-}
-
-qreal
-Animxmlparser::getLastPacketEventTime ()
-{
-  return m_lastPacketEventTime;
-}
-
-qreal
-Animxmlparser::getFirstPacketTime ()
-{
-  return m_firstPacketTime;
-}
-
-QPointF
-Animxmlparser::getMinPoint ()
-{
-  return QPointF (m_minNodeX, m_minNodeY);
-}
-
-QPointF
-Animxmlparser::getMaxPoint ()
-{
-  return QPointF (m_maxNodeX, m_maxNodeY);
-}
-
-qreal
-Animxmlparser::getThousandthPacketTime ()
-{
-  return m_thousandThPacketTime;
-}
-
-void
-Animxmlparser::doParse ()
-{
-  uint64_t parsedElementCount = 0;
+  NS_LOG_DEBUG("doParse of parsed element");
   AnimatorMode * pAnimatorMode = AnimatorMode::getInstance ();
-  while (!isParsingComplete ())
-    {
-      if (AnimatorMode::getInstance ()->keepAppResponsive ())
-        {
-          AnimatorMode::getInstance ()->setParsingCount (parsedElementCount);
 
-        }
-      ParsedElement parsedElement = parseNext ();
-      switch (parsedElement.type)
-        {
-        case XML_ANIM:
+  switch (parsedElement.type)
+  {
+    case XML_ANIM:
         {
           AnimatorMode::getInstance ()->setVersion (parsedElement.version);
           //qDebug (QString ("XML Version:") + QString::number (version));
           break;
         }
-        case XML_NODE:
+    case XML_NODE:
         {
             m_minNodeX = qMin (m_minNodeX, parsedElement.node_x);
             m_minNodeY = qMin (m_minNodeY, parsedElement.node_y);
@@ -405,8 +307,116 @@ Animxmlparser::doParse ()
         {
           //qDebug ("Invalid XML element");
         }
-        } //switch
-    } // while loop
+
+  }
+}
+
+void
+Animxmlparser::searchForVersion ()
+{
+  QFile * f = new QFile (m_traceFileName);
+  if (f->open (QIODevice::ReadOnly | QIODevice::Text))
+    {
+      QString firstLine = QString (f->readLine ());
+      int startIndex = 0;
+      int endIndex = 0;
+      QString versionField = VERSION_FIELD_DEFAULT;
+      startIndex = firstLine.indexOf (versionField);
+      endIndex = firstLine.lastIndexOf ("\"");
+      if ((startIndex != -1) && (endIndex > startIndex))
+        {
+          int adjustedStartIndex = startIndex + versionField.length ();
+          QString v = firstLine.mid (adjustedStartIndex, endIndex-adjustedStartIndex);
+          m_version = v.toDouble ();
+        }
+      f->close ();
+      delete f;
+    }
+}
+
+uint64_t
+Animxmlparser::getRxCount ()
+{
+  searchForVersion ();
+  uint64_t count = 1;
+  QFile * f = new QFile (m_traceFileName);
+  if (f->open (QIODevice::ReadOnly | QIODevice::Text))
+    {
+      QString allContent = QString (f->readAll ());
+      int j = 0;
+      QString searchString = " toId=";
+      if (m_version >= 3.102)
+        searchString = " tId";
+
+      while ( (j = allContent.indexOf (searchString, j)) != -1)
+        {
+          ++j;
+          ++count;
+        }
+      f->close ();
+      delete f;
+      //qDebug (QString::number (count));
+    }
+  return qMax (count, (uint64_t)1);
+}
+
+bool
+Animxmlparser::isFileValid ()
+{
+  return m_fileIsValid;
+}
+
+bool
+Animxmlparser::isParsingComplete ()
+{
+  return m_parsingComplete;
+}
+
+qreal
+Animxmlparser::getLastPacketEventTime ()
+{
+  return m_lastPacketEventTime;
+}
+
+qreal
+Animxmlparser::getFirstPacketTime ()
+{
+  return m_firstPacketTime;
+}
+
+QPointF
+Animxmlparser::getMinPoint ()
+{
+  return QPointF (m_minNodeX, m_minNodeY);
+}
+
+QPointF
+Animxmlparser::getMaxPoint ()
+{
+  return QPointF (m_maxNodeX, m_maxNodeY);
+}
+
+qreal
+Animxmlparser::getThousandthPacketTime ()
+{
+  return m_thousandThPacketTime;
+}
+
+void
+Animxmlparser::doParse ()
+{
+  NS_LOG_DEBUG("doParse");
+  parsedElementCount = 0;
+  // AnimatorMode * pAnimatorMode = AnimatorMode::getInstance ();
+  while (!isParsingComplete ())
+    {
+      if (AnimatorMode::getInstance ()->keepAppResponsive ())
+        {
+          AnimatorMode::getInstance ()->setParsingCount (parsedElementCount);
+        }
+      ParsedElement parsedElement = parseNext ();
+      doParse(parsedElement);
+    } 
 }
 
 ParsedElement

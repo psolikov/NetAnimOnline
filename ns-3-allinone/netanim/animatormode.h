@@ -27,9 +27,10 @@
 #include "animatorscene.h"
 #include "animatorview.h"
 #include "mode.h"
+#include "animxmlparser.h"
 #include "timevalue.h"
 #include "animevent.h"
-#include "QtTreePropertyBrowser"
+// #include "QtTreePropertyBrowser"
 
 namespace netanim
 {
@@ -53,6 +54,7 @@ public:
   // Getters
 
   static AnimatorMode * getInstance ();
+  Animxmlparser * getAnimxmlparser(); //Online mode
   QWidget * getCentralWidget ();
   QString getTabName ();
   qreal getCurrentNodeSize ();
@@ -61,6 +63,7 @@ public:
   qreal getLastPacketEventTime ();
   qreal getThousandthPacketTime ();
   qreal getFirstPacketTime ();
+  bool getOnlineMode();//Online mode
 
   // Setters
 
@@ -77,6 +80,8 @@ public:
   void setShowNodeTrajectory (AnimNode * animNode);
   void setBackgroundImageProperties (BackgroudImageProperties_t prop);
   BackgroudImageProperties_t getBackgroundProperties ();
+  void setOnlineMode (bool mode); //Online mode
+  // void setEventsOver (bool isOver);
 
   // Actions
 
@@ -85,6 +90,7 @@ public:
   void externalPauseEvent ();
   void start ();
   void openPropertyBroswer ();
+  bool parseOnline (); //Online mode
 
 private:
 
@@ -99,6 +105,7 @@ private:
     PAUSING,
     SIMULATION_COMPLETE
   } AnimatorModeState_t;
+  Animxmlparser * m_animxmlparser; //Online mode
   double m_version;
   bool m_playing;
   AnimatorModeState_t m_state;
@@ -130,9 +137,9 @@ private:
   QPointF m_minPoint;
   QPointF m_maxPoint;
   bool m_backgroundExists;
-
-
-
+  bool m_onlineMode; //Online mode
+  bool m_eventObtained; //Online mode
+  qreal m_nextTs; //Online mode
 
   //controls
   QVBoxLayout * m_vLayout;
@@ -189,6 +196,7 @@ private:
 
   //functions
   AnimatorMode ();
+  ~AnimatorMode ();
   bool parseXMLTraceFile (QString traceFileName);
   void setLabelStyleSheet ();
   void initUpdateRate ();
@@ -227,6 +235,7 @@ private:
   QPropertyAnimation * getButtonAnimation (QToolButton * toolButton);
   void initPropertyBrowser ();
   void removeWiredPacket (AnimPacket * animPacket);
+  qreal getTimeFromSimulator (void);
 
 
 private slots:

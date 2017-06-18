@@ -81,7 +81,7 @@ RegularWifiMac::DoInitialize ()
   NS_LOG_FUNCTION (this);
   m_dca->Initialize ();
 
-  for (EdcaQueues::const_iterator i = m_edca.begin (); i != m_edca.end (); ++i)
+  for (EdcaQueues::iterator i = m_edca.begin (); i != m_edca.end (); ++i)
     {
       i->second->Initialize ();
     }
@@ -111,7 +111,7 @@ RegularWifiMac::DoDispose ()
       i->second->Dispose ();
       i->second = 0;
     }
-
+    
   delete m_dcfManager;
   m_dcfManager = 0;
 }
@@ -128,7 +128,7 @@ RegularWifiMac::SetWifiRemoteStationManager (Ptr<WifiRemoteStationManager> stati
 
   m_dca->SetWifiRemoteStationManager (stationManager);
 
-  for (EdcaQueues::const_iterator i = m_edca.begin (); i != m_edca.end (); ++i)
+  for (EdcaQueues::iterator i = m_edca.begin (); i != m_edca.end (); ++i)
     {
       i->second->SetWifiRemoteStationManager (stationManager);
     }
@@ -154,16 +154,9 @@ RegularWifiMac::GetHtCapabilities (void) const
       capabilities.SetShortGuardInterval20 (m_phy->GetShortGuardInterval ());
       capabilities.SetShortGuardInterval40 (m_phy->GetChannelWidth () >= 40 && m_phy->GetShortGuardInterval ());
       capabilities.SetGreenfield (m_phy->GetGreenfield ());
-      uint32_t maxAmsduLength = std::max (std::max (m_beMaxAmsduSize, m_bkMaxAmsduSize), std::max (m_voMaxAmsduSize, m_viMaxAmsduSize));
-      capabilities.SetMaxAmsduLength (maxAmsduLength > 3839); //0 if 3839 and 1 if 7935
+      capabilities.SetMaxAmsduLength (1); //hardcoded for now (TBD)
       capabilities.SetLSigProtectionSupport (!m_phy->GetGreenfield ());
-      double maxAmpduLengthExponent = std::max (std::ceil ((std::log (std::max (std::max (m_beMaxAmpduSize, m_bkMaxAmpduSize), std::max (m_voMaxAmpduSize, m_viMaxAmpduSize))
-                                                                      + 1.0)
-                                                            / std::log (2.0))
-                                                           - 13.0),
-                                                0.0);
-      NS_ASSERT (maxAmpduLengthExponent >= 0 && maxAmpduLengthExponent <= 255);
-      capabilities.SetMaxAmpduLength (std::max<uint8_t> (3, static_cast<uint8_t> (maxAmpduLengthExponent))); //0 to 3 for HT
+      capabilities.SetMaxAmpduLength (3); //hardcoded for now (TBD)
       uint64_t maxSupportedRate = 0; //in bit/s
       for (uint8_t i = 0; i < m_phy->GetNMcs (); i++)
         {
@@ -205,18 +198,11 @@ RegularWifiMac::GetVhtCapabilities (void) const
         {
           capabilities.SetSupportedChannelWidthSet (0);
         }
-      uint32_t maxMpduLength = std::max (std::max (m_beMaxAmsduSize, m_bkMaxAmsduSize), std::max (m_voMaxAmsduSize, m_viMaxAmsduSize)) + 56; //see section 9.11 of 11ac standard
-      capabilities.SetMaxMpduLength (uint8_t (maxMpduLength > 3895) + uint8_t (maxMpduLength > 7991)); //0 if 3895, 1 if 7991, 2 for 11454
+      capabilities.SetMaxMpduLength (2); //hardcoded for now (TBD)
       capabilities.SetRxLdpc (m_phy->GetLdpc ());
       capabilities.SetShortGuardIntervalFor80Mhz ((m_phy->GetChannelWidth () == 80) && m_phy->GetShortGuardInterval ());
       capabilities.SetShortGuardIntervalFor160Mhz ((m_phy->GetChannelWidth () == 160) && m_phy->GetShortGuardInterval ());
-      double maxAmpduLengthExponent = std::max (std::ceil ((std::log (std::max (std::max (m_beMaxAmpduSize, m_bkMaxAmpduSize), std::max (m_voMaxAmpduSize, m_viMaxAmpduSize))
-                                                                      + 1.0)
-                                                            / std::log (2.0))
-                                                           - 13.0),
-                                                0.0);
-      NS_ASSERT (maxAmpduLengthExponent >= 0 && maxAmpduLengthExponent <= 255);
-      capabilities.SetMaxAmpduLengthExponent (std::max<uint8_t> (7, static_cast<uint8_t> (maxAmpduLengthExponent))); //0 to 7 for VHT
+      capabilities.SetMaxAmpduLengthExponent (7); //hardcoded for now (TBD)
       uint8_t maxMcs = 0;
       for (uint8_t i = 0; i < m_phy->GetNMcs (); i++)
         {
@@ -288,13 +274,7 @@ RegularWifiMac::GetHeCapabilities (void) const
           gi |= 0x02;
         }
       capabilities.SetHeLtfAndGiForHePpdus (gi);
-      double maxAmpduLengthExponent = std::max (std::ceil ((std::log (std::max (std::max (m_beMaxAmpduSize, m_bkMaxAmpduSize), std::max (m_voMaxAmpduSize, m_viMaxAmpduSize))
-                                                                      + 1.0)
-                                                            / std::log (2.0))
-                                                           - 13.0),
-                                                0.0);
-      NS_ASSERT (maxAmpduLengthExponent >= 0 && maxAmpduLengthExponent <= 255);
-      capabilities.SetMaxAmpduLengthExponent (std::max<uint8_t> (7, static_cast<uint8_t> (maxAmpduLengthExponent))); //assume 0 to 7 for HE
+      capabilities.SetMaxAmpduLengthExponent (7); //hardcoded for now (TBD)
       uint8_t maxMcs = 0;
       for (uint8_t i = 0; i < m_phy->GetNMcs (); i++)
         {
@@ -457,7 +437,7 @@ void
 RegularWifiMac::SetTypeOfStation (TypeOfStation type)
 {
   NS_LOG_FUNCTION (this << type);
-  for (EdcaQueues::const_iterator i = m_edca.begin (); i != m_edca.end (); ++i)
+  for (EdcaQueues::iterator i = m_edca.begin (); i != m_edca.end (); ++i)
     {
       i->second->SetTypeOfStation (type);
     }
@@ -1300,7 +1280,7 @@ RegularWifiMac::ConfigureContentionWindow (uint32_t cwMin, uint32_t cwMax)
   ConfigureDcf (m_dca, cwMin, cwMax, isDsssOnly, AC_BE_NQOS);
 
   //Now we configure the EDCA functions
-  for (EdcaQueues::const_iterator i = m_edca.begin (); i != m_edca.end (); ++i)
+  for (EdcaQueues::iterator i = m_edca.begin (); i != m_edca.end (); ++i)
     {
       ConfigureDcf (i->second, cwMin, cwMax, isDsssOnly, i->first);
     }
@@ -1362,7 +1342,7 @@ void
 RegularWifiMac::EnableAggregation (void)
 {
   NS_LOG_FUNCTION (this);
-  for (EdcaQueues::const_iterator i = m_edca.begin (); i != m_edca.end (); ++i)
+  for (EdcaQueues::iterator i = m_edca.begin (); i != m_edca.end (); ++i)
     {
       if (i->second->GetMsduAggregator () == 0)
         {
@@ -1382,7 +1362,7 @@ void
 RegularWifiMac::DisableAggregation (void)
 {
   NS_LOG_FUNCTION (this);
-  for (EdcaQueues::const_iterator i = m_edca.begin (); i != m_edca.end (); ++i)
+  for (EdcaQueues::iterator i = m_edca.begin (); i != m_edca.end (); ++i)
     {
       i->second->SetMsduAggregator (0);
       i->second->SetMpduAggregator (0);

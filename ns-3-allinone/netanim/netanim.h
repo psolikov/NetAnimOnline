@@ -29,7 +29,7 @@ class NetAnim : public QObject
 {
   Q_OBJECT
 public:
-  NetAnim ();
+  NetAnim (bool OnlineMode = false);
   QTabWidget * getTabWidget();
 private:
   typedef std::map <int, Mode *> TabIndexModeMap_t;
