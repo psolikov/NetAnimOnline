@@ -554,7 +554,7 @@ static void CheckEnvironmentVariables (void)
                              "\" in env variable NS_LOG, see above for a list of valid components");
             }
         }
-      cur = next + 1; // parse next component
+      cur = next + 1;  // parse next component
     }
 #endif
 }
@@ -586,3 +586,4 @@ ParameterLogger::ParameterLogger (std::ostream &os)
 }
 
 } // namespace ns3
+
