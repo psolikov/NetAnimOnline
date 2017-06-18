@@ -125,7 +125,7 @@ private:
   uint32_t m_uid;
   /** Unique id of the current event. */
   uint32_t m_currentUid;
-  // * Timestamp of the current event. 
+  //* Timestamp of the current event. 
   uint64_t m_currentTs;
   /** Execution context of the current event. */
   uint32_t m_currentContext;
@@ -146,4 +146,4 @@ private:
 
 } // namespace ns3
 
-#endif /* DEFAULT_SIMULATOR_IMPL_H */ 
+#endif /* DEFAULT_SIMULATOR_IMPL_H */
