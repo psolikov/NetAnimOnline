@@ -41,7 +41,7 @@ namespace ns3 {
 
 // Note:  Logging in this file is largely avoided due to the
 // number of calls that are made to these functions and the possibility
-// of causing recursions leading r stack overflow
+// of causing recursions leading to stack overflow
 NS_LOG_COMPONENT_DEFINE ("DefaultSimulatorImpl");
 
 NS_OBJECT_ENSURE_REGISTERED (DefaultSimulatorImpl);
