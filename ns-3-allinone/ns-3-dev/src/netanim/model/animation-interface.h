@@ -43,8 +43,32 @@
 #include "ns3/rectangle.h"
 #include "ns3/ipv4.h"
 #include "ns3/ipv4-l3-protocol.h"
-
+#include "animxmlparser.h"
+#include "netanim.h"
+#include "animatormode.h"
+#include "default-simulator-impl.h"
 namespace ns3 {
+
+using netanim::ParsedElement; 
+using netanim::ParsedElementType;
+using netanim::XML_INVALID;
+using netanim::XML_ANIM;
+using netanim::XML_TOPOLOGY;
+using netanim::XML_NODE;
+using netanim::XML_LINK;
+using netanim::XML_NONP2P_LINK;
+using netanim::XML_PACKET_RX;
+using netanim::XML_WPACKET_RX;
+using netanim::XML_LINKUPDATE;
+using netanim::XML_NODEUPDATE;
+using netanim::XML_RESOURCE;
+using netanim::XML_BACKGROUNDIMAGE;
+using netanim::XML_CREATE_NODE_COUNTER;
+using netanim::XML_NODECOUNTER_UPDATE;
+using netanim::XML_PACKET_TX_REF;
+using netanim::XML_WPACKET_RX_REF;
+using netanim::XML_IP;
+using netanim::XML_IPV6;
 
 #define MAX_PKTS_PER_TRACE_FILE 100000
 #define PURGE_INTERVAL 5
@@ -54,6 +78,8 @@ namespace ns3 {
 
 
 struct NodeSize;
+
+
 
 /**
  * \defgroup netanim Network Animation
@@ -71,15 +97,15 @@ struct NodeSize;
  */
 class AnimationInterface
 {
-public:
+public:  
 
   /**
    * \brief Constructor
    * \param filename The Filename for the trace file used by the Animator
    *
    */
+  AnimationInterface();
   AnimationInterface (const std::string filename);
-
   /**
    * Counter Types 
    */
@@ -422,6 +448,13 @@ public:
    */
   double GetNodeEnergyFraction (Ptr <const Node> node) const;
 
+//getters for Online
+
+  bool isOnlineMode();
+  /*static AnimationInterface * GetNoXMLModeInstance ();
+  static netanim::NetAnim * GetNetAnim ();
+  static QApplication * GetQApplication ();*/
+
 private:
 
   /**
@@ -634,6 +667,16 @@ private:
   static Rectangle * userBoundary; ///< user boundary
   bool m_trackPackets; ///< track packets
 
+//##############New##############
+  bool m_onlineMode = false;
+  netanim::Animxmlparser * m_animxmlparser;
+  QApplication * m_application;
+  netanim::NetAnim * m_netanim;
+
+  /*static AnimationInterface * noXMLNodeInstance;
+  static netanim::NetAnim * netAnim;
+  static QApplication * app;
+  netanim::Animxmlparser * m_parser*/
   // Counter ID
   uint32_t m_remainingEnergyCounterId; ///< remaining energy counter ID
   
@@ -1315,6 +1358,8 @@ private:
    * \param routing the routing
    */
   void WriteXmlAnim (bool routing = false);
+
+  ParsedElement WriteAnim (bool routing = false);
   /**
    * Write XML update node position function
    * \param nodeId the node ID
@@ -1322,6 +1367,8 @@ private:
    * \param y the Y position
    */
   void WriteXmlUpdateNodePosition (uint32_t nodeId, double x, double y);
+
+  ParsedElement WriteUpdateNodePosition (uint32_t nodeId, double x, double y);
   /**
    * Write XML update node color function
    * \param nodeId the node ID
@@ -1330,11 +1377,15 @@ private:
    * \param b the blue color
    */
   void WriteXmlUpdateNodeColor (uint32_t nodeId, uint8_t r, uint8_t g, uint8_t b);
+
+  ParsedElement WriteUpdateNodeColor (uint32_t nodeId, uint8_t r, uint8_t g, uint8_t b);
   /**
    * Write XML update node description function
    * \param nodeId the node ID
    */
   void WriteXmlUpdateNodeDescription (uint32_t nodeId);
+
+  ParsedElement WriteUpdateNodeDescription (uint32_t nodeId);
   /**
    * Write XML update node size function
    * \param nodeId the node ID
@@ -1342,12 +1393,16 @@ private:
    * \param height the height
    */
   void WriteXmlUpdateNodeSize (uint32_t nodeId, double width, double height);
+
+  ParsedElement WriteUpdateNodeSize (uint32_t nodeId, double width, double height);
   /**
    * Write XML add resource function
    * \param resourceId the resource ID
    * \param resourcePath the resource path
    */
   void WriteXmlAddResource (uint32_t resourceId, std::string resourcePath);
+
+  ParsedElement WriteAddResource (uint32_t resourceId, std::string resourcePath);
   /**
    * Write XML add node counter function
    * \param counterId the counter ID
@@ -1355,12 +1410,16 @@ private:
    * \param counterType the counter type
    */
   void WriteXmlAddNodeCounter (uint32_t counterId, std::string counterName, CounterType counterType);
+
+  ParsedElement WriteAddNodeCounter (uint32_t counterId, std::string counterName, CounterType counterType);
   /**
    * Write XML update node image function
    * \param nodeId the node ID
    * \param resourceId the resource ID
    */
   void WriteXmlUpdateNodeImage (uint32_t nodeId, uint32_t resourceId);
+
+  ParsedElement WriteUpdateNodeImage (uint32_t nodeId, uint32_t resourceId);
   /**
    * Write XML update node counter function
    * \param counterId the counter ID
@@ -1368,6 +1427,8 @@ private:
    * \param value the node counter value
    */
   void WriteXmlUpdateNodeCounter (uint32_t counterId, uint32_t nodeId, double value);
+
+  ParsedElement WriteUpdateNodeCounter (uint32_t counterId, uint32_t nodeId, double value);
   /**
    * Write XML node function
    * \param id the ID
@@ -1376,6 +1437,8 @@ private:
    * \param locY the y location
    */
   void WriteXmlNode (uint32_t id, uint32_t sysId, double locX, double locY);
+  
+  ParsedElement WriteNode (uint32_t id, uint32_t sysId, double locX, double locY);
   /**
    * Write XML link counter function
    * \param fromId the from device
@@ -1383,6 +1446,8 @@ private:
    * \param toId the to ID
    */
   void WriteXmlLink (uint32_t fromId, uint32_t toLp, uint32_t toId);
+
+  ParsedElement WriteLink (uint32_t fromId, uint32_t toLp, uint32_t toId);
   /**
    * Write XML update link counter function
    * \param fromId the from device
@@ -1390,6 +1455,8 @@ private:
    * \param linkDescription the link description
    */
   void WriteXmlUpdateLink (uint32_t fromId, uint32_t toId, std::string linkDescription);
+
+  ParsedElement WriteUpdateLink (uint32_t fromId, uint32_t toId, std::string linkDescription);
   /**
    * Write XMLP function
    * \param pktType the packet type
@@ -1409,6 +1476,15 @@ private:
                                  double fbRx, 
                                  double lbRx,
                                  std::string metaInfo = ""); 
+
+  ParsedElement WriteP (std::string pktType, 
+                                 uint32_t fId, 
+                                 double fbTx, 
+                                 double lbTx, 
+                                 uint32_t tId, 
+                                 double fbRx, 
+                                 double lbRx,
+                                 std::string metaInfo = ""); 
   /**
    * Write XMLP function
    * \param animUid the UID
@@ -1418,6 +1494,8 @@ private:
    * \param lbTx the LB transmit
    */
   void WriteXmlP (uint64_t animUid, std::string pktType, uint32_t fId, double fbTx, double lbTx);
+
+  ParsedElement WriteP (uint64_t animUid, std::string pktType, uint32_t fId, double fbTx, double lbTx);
   /**
    * Write XMLP Ref function
    * \param animUid the UID
@@ -1426,6 +1504,8 @@ private:
    * \param metaInfo the meta info
    */
   void WriteXmlPRef (uint64_t animUid, uint32_t fId, double fbTx, std::string metaInfo = "");
+
+  ParsedElement WritePRef (uint64_t animUid, uint32_t fId, double fbTx, std::string metaInfo = "");
   /**
    * Write XML close function
    * \param name the name
@@ -1439,12 +1519,16 @@ private:
    * \param channelType the channel type
    */
   void WriteXmlNonP2pLinkProperties (uint32_t id, std::string ipAddress, std::string channelType);
+
+  ParsedElement WriteNonP2pLinkProperties (uint32_t id, std::string ipAddress);
   /**
    * Write XML routing function
    * \param id the ID
    * \param routingInfo the routing info
    */
   void WriteXmlRouting (uint32_t id, std::string routingInfo);
+  
+  void WriteRouting (uint32_t id, std::string routingInfo);
   /**
    * Write XMLRP function
    * \param nodeId the node ID
@@ -1452,6 +1536,8 @@ private:
    * \param rpElements the route path elements
    */
   void WriteXmlRp (uint32_t nodeId, std::string destination, Ipv4RoutePathElements rpElements);
+  
+  void WriteRp (uint32_t nodeId, std::string destination, Ipv4RoutePathElements rpElements);
   /**
    * Write XML update background function
    * \param fileName the file name
@@ -1462,12 +1548,16 @@ private:
    * \param opacity the opacity
    */
   void WriteXmlUpdateBackground (std::string fileName, double x, double y, double scaleX, double scaleY, double opacity);
+
+  ParsedElement WriteUpdateBackground (std::string fileName, double x, double y, double scaleX, double scaleY, double opacity);
   /**
    * Write XML Ipv4 addresses function
    * \param nodeId the node ID
    * \param ipv4Addresses the list of Ipv4 addresses
    */
   void WriteXmlIpv4Addresses (uint32_t nodeId, std::vector<std::string> ipv4Addresses);
+
+  ParsedElement WriteIpv4Addresses (uint32_t nodeId, std::vector<std::string> ipv4Addresses);
   /**
    * Write XML Ipv6 addresses function
    * \param nodeId the node ID
@@ -1475,7 +1565,10 @@ private:
    */
   void WriteXmlIpv6Addresses (uint32_t nodeId, std::vector<std::string> ipv6Addresses);
 
+  ParsedElement WriteIpv6Addresses (uint32_t nodeId, std::vector<std::string> ipv4Addresses);
+
 };
+
 
 
 
