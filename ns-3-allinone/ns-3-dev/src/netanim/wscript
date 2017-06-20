@@ -7,8 +7,11 @@ NETANIM_RELEASE_NAME = "netanim-3.108"
 
 def build (bld) :
     module = bld.create_ns3_module ('netanim', ['internet', 'mobility', 'wimax', 'wifi', 'csma', 'lte', 'uan', 'lr-wpan', 'energy', 'wave'])
-    module.includes = '.'
+    #module.includes = '.'
     module.source = [ 'model/animation-interface.cc', ]
+    module.includes = ['.', '../../../netanim/', '/usr/include/qt4', '/usr/include/qt4/QtGui', '/usr/include/qt4/QtCore']
+    module.lib = ['NetAnimOnline', 'QtGui', 'QtCore']
+    module.linkflags = ['-lNetAnimOnline', '-L../../netanim/', '-Wl,-R,../../netanim/']
     netanim_test = bld.create_ns3_module_test_library('netanim')
     netanim_test.source = ['test/netanim-test.cc', ]
     headers = bld(features='ns3header')
