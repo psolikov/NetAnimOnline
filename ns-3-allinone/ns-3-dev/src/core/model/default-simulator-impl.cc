@@ -30,7 +30,7 @@
 
 #include <cmath>
 
-
+// #include "animatormode.h"
 /**
  * \file
  * \ingroup simulator
@@ -41,10 +41,13 @@ namespace ns3 {
 
 // Note:  Logging in this file is largely avoided due to the
 // number of calls that are made to these functions and the possibility
-// of causing recursions leading to stack overflow
+// of causing recursions leading r stack overflow
 NS_LOG_COMPONENT_DEFINE ("DefaultSimulatorImpl");
 
 NS_OBJECT_ENSURE_REGISTERED (DefaultSimulatorImpl);
+
+bool DefaultSimulatorImpl::m_isOnline = false;
+uint64_t DefaultSimulatorImpl::m_nextTs = -1;
 
 TypeId
 DefaultSimulatorImpl::GetTypeId (void)
@@ -80,6 +83,12 @@ DefaultSimulatorImpl::~DefaultSimulatorImpl ()
   NS_LOG_FUNCTION (this);
 }
 
+uint64_t
+DefaultSimulatorImpl::getNextTs (void)
+{
+  return m_nextTs;
+}
+
 void
 DefaultSimulatorImpl::DoDispose (void)
 {
@@ -94,6 +103,7 @@ DefaultSimulatorImpl::DoDispose (void)
   m_events = 0;
   SimulatorImpl::DoDispose ();
 }
+
 void
 DefaultSimulatorImpl::Destroy ()
 {
@@ -127,6 +137,18 @@ DefaultSimulatorImpl::SetScheduler (ObjectFactory schedulerFactory)
   m_events = scheduler;
 }
 
+void
+DefaultSimulatorImpl::setOnlineMode (bool mode)
+{
+  m_isOnline = mode;
+}
+
+bool
+DefaultSimulatorImpl::getOnlineMode ()
+{
+  return m_isOnline;
+}
+
 // System ID for non-distributed simulation is always zero
 uint32_t 
 DefaultSimulatorImpl::GetSystemId (void) const
@@ -152,11 +174,59 @@ DefaultSimulatorImpl::ProcessOneEvent (void)
   ProcessEventsWithContext ();
 }
 
+void
+DefaultSimulatorImpl::ProcessElementsWithSameTime (void)
+{
+  m_isOnline = -1;
+  if (!m_events->IsEmpty ())
+  {
+      Scheduler::Event first = m_events->RemoveNext ();
+      // Scheduler::Event current = first; 
+      m_currentTs = first.key.m_ts;
+      m_unscheduledEvents--;
+      m_currentContext = first.key.m_context;
+      m_currentUid = first.key.m_uid;
+      first.impl->Invoke ();
+      first .impl->Unref ();
+    
+      ProcessEventsWithContext ();
+      NS_LOG_DEBUG(first.key.m_ts);
+      while (!m_events->IsEmpty ())
+      {
+        Scheduler::Event current = m_events->RemoveNext ();
+        if (current.key.m_ts > m_currentTs)
+          {
+            m_nextTs = current.key.m_ts;
+            m_events->Insert (current);
+            return;
+          }
+        m_currentTs = current.key.m_ts;
+        m_unscheduledEvents--;
+        NS_LOG_LOGIC ("handle " << current.key.m_ts);
+        
+        m_currentContext = current.key.m_context;
+        m_currentUid = current.key.m_uid;
+        current.impl->Invoke ();
+        current.impl->Unref ();
+      
+        ProcessEventsWithContext ();
+      }
+      
+
+  }
+}
+
+
 bool 
 DefaultSimulatorImpl::IsFinished (void) const
 {
   return m_events->IsEmpty () || m_stop;
 }
+
+/*bool 
+DefaultSimulatorImpl::getmEvents (void){
+  return m_events->IsEmpty();
+}*/
 
 void
 DefaultSimulatorImpl::ProcessEventsWithContext (void)
@@ -188,23 +258,38 @@ DefaultSimulatorImpl::ProcessEventsWithContext (void)
     }
 }
 
+/*void setStartClock (struct timeval * startClock)
+{
+  gettimeofday (startClock, 0);
+} 
+*/
 void
 DefaultSimulatorImpl::Run (void)
 {
   NS_LOG_FUNCTION (this);
   // Set the current threadId as the main threadId
-  m_main = SystemThread::Self();
-  ProcessEventsWithContext ();
-  m_stop = false;
 
-  while (!m_events->IsEmpty () && !m_stop) 
-    {
-      ProcessOneEvent ();
-    }
+  if(!m_isOnline)
+  {
+    m_main = SystemThread::Self();
+    ProcessEventsWithContext ();
+    m_stop = false;
 
-  // If the simulator stopped naturally by lack of events, make a
-  // consistency test to check that we didn't lose any events along the way.
-  NS_ASSERT (!m_events->IsEmpty () || m_unscheduledEvents == 0);
+    while (!m_events->IsEmpty () && !m_stop) 
+      {
+        ProcessOneEvent ();
+      }
+    // If the simulator stopped naturally by lack of events, make a
+    // consistency test to check that we didn't lose any events along the way.
+    NS_ASSERT (!m_events->IsEmpty () || m_unscheduledEvents == 0);
+  }
+  else
+  {
+    ProcessEventsWithContext ();
+    m_stop = false;
+
+    ProcessElementsWithSameTime ();
+  }
 }
 
 void 
@@ -409,9 +494,10 @@ DefaultSimulatorImpl::GetMaximumSimulationTime (void) const
 }
 
 uint32_t
-DefaultSimulatorImpl::GetContext (void) const
+DefaultSimulatorImpl::GetContext () const
 {
   return m_currentContext;
 }
 
 } // namespace ns3
+

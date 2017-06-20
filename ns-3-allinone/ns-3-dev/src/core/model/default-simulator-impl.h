@@ -30,7 +30,6 @@
 #include "ptr.h"
 
 #include <list>
-
 /**
  * \file
  * \ingroup simulator
@@ -78,11 +77,17 @@ public:
   virtual uint32_t GetSystemId (void) const; 
   virtual uint32_t GetContext (void) const;
 
+  //OnlineMode
+  static void setOnlineMode (bool mode);
+  static bool getOnlineMode (void); 
+  static uint64_t getNextTs (void);
+  // static bool getmEvents (void);
 private:
   virtual void DoDispose (void);
 
   /** Process the next event. */
   void ProcessOneEvent (void);
+  void ProcessElementsWithSameTime (void); //OnlineMode
   /** Move events from a different context into the main event queue. */
   void ProcessEventsWithContext (void);
  
@@ -120,7 +125,7 @@ private:
   uint32_t m_uid;
   /** Unique id of the current event. */
   uint32_t m_currentUid;
-  /** Timestamp of the current event. */
+  // * Timestamp of the current event. 
   uint64_t m_currentTs;
   /** Execution context of the current event. */
   uint32_t m_currentContext;
@@ -132,8 +137,13 @@ private:
 
   /** Main execution thread. */
   SystemThread::ThreadId m_main;
+
+  // uint64_t currentTs;
+  static uint64_t m_nextTs;
+  static bool m_isOnline; //Online Mode
+
 };
 
 } // namespace ns3
 
-#endif /* DEFAULT_SIMULATOR_IMPL_H */
+#endif /* DEFAULT_SIMULATOR_IMPL_H */ 
