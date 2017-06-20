@@ -165,6 +165,7 @@ public:
   void setMaxSimulationTime (qreal t);
   bool isFileValid ();
   uint64_t getRxCount ();
+  void doParse(ParsedElement parsedelement); //Online Mode
   void doParse ();
   qreal getLastPacketEventTime ();
   qreal getThousandthPacketTime ();
@@ -184,6 +185,8 @@ private:
   double m_version;
   qreal m_thousandThPacketTime;
   qreal m_firstPacketTime;
+
+  uint64_t parsedElementCount;
 
   qreal m_minNodeX;
   qreal m_minNodeY;
