@@ -30,6 +30,9 @@ using namespace ns3;
 
 int main (int argc, char *argv[])
 {
+  freopen("out.txt","w", stderr);
+  LogComponentEnableAll (LOG_LEVEL_ALL);
+
   Config::SetDefault ("ns3::OnOffApplication::PacketSize", UintegerValue (512));
   Config::SetDefault ("ns3::OnOffApplication::DataRate", StringValue ("500kb/s"));
 
@@ -69,6 +72,7 @@ int main (int argc, char *argv[])
   clientHelper.SetAttribute ("OffTime", StringValue ("ns3::ConstantRandomVariable[Constant=0]"));
   ApplicationContainer clientApps;
 
+
   // Create an on/off app sending packets
   AddressValue remoteAddress (InetSocketAddress (grid.GetIpv4Address (xSize-1,ySize-1), 1000));
   clientHelper.SetAttribute ("Remote", remoteAddress);
@@ -81,10 +85,10 @@ int main (int argc, char *argv[])
   grid.BoundingBox (1, 1, 100, 100);
 
   // Create the animation object and configure for specified output
-  AnimationInterface anim (animFile);
+  Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
+  AnimationInterface anim;
 
   // Set up the actual simulation
-  Ipv4GlobalRoutingHelper::PopulateRoutingTables ();
 
   Simulator::Run ();
   Simulator::Destroy ();
